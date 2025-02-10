@@ -8,11 +8,13 @@ from collections import deque
 import threading
 import atexit
 import re
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key')
 app.config['UPLOAD_FOLDER'] = 'uploads'
-socketio = SocketIO(app)
+socketio = SocketIO(app, cors_allowed_origins="*")
 
 # Constants
 GENERAL_ROOM = 'general'
