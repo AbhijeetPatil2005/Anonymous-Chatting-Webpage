@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ 'General Chat Room' if room_id == 'general' else 'Private Chat Room' }}</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <i class="fas fa-comments"></i>
+            <span>
+                {% if room_id == 'general' %}
+                    General Chat Room
+                {% else %}
+                    {{ chat_rooms[room_id].room_name if room_id in chat_rooms else 'Private Chat Room' }}
+                {% endif %}
+            </span>
+            <div class="online-status">
+                <i class="fas fa-circle"></i>
+                <span>Online Users: <strong id="user-count">0</strong></span>
+            </div>
+            <button id="quit-button" class="quit-button">
+                <i class="fas fa-sign-out-alt"></i> Quit
+            </button>
+        </div>
+        <div id="chat-messages"></div>
+        <div class="input-area">
+            <div class="message-input-container">
+                <div class="input-buttons">
+                    <button class="emoji-button" id="emoji-trigger" onclick="toggleEmojiPanel()">
+                        <i class="far fa-smile"></i>
+                    </button>
+                </div>
+                <input type="text" id="message-input" placeholder="Type a message...">
+            </div>
+            <div class="button-container">
+                <label for="file-input" class="file-input-label">
+                    <i class="fas fa-paperclip"></i>
+                </label>
+                <input type="file" id="file-input" hidden>
+                <button onclick="sendMessage()" class="send-button">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Emoji Panel -->
+    <div id="emoji-panel" class="emoji-panel hidden">
+        <div class="emoji-categories">
+            <button class="active" onclick="showEmojiCategory('smileys')">😊</button>
+            <button onclick="showEmojiCategory('hearts')">❤️</button>
+            <button onclick="showEmojiCategory('hands')">👋</button>
+            <button onclick="showEmojiCategory('animals')">🐶</button>
+            <button onclick="showEmojiCategory('food')">🍔</button>
+            <button onclick="showEmojiCategory('activities')">⚽</button>
+            <button onclick="showEmojiCategory('travel')">✈️</button>
+            <button onclick="showEmojiCategory('objects')">💡</button>
+        </div>
+        <div class="emoji-search">
+            <input type="text" placeholder="Search emojis..." id="emoji-search">
+        </div>
+        <div class="emoji-grid" id="emoji-grid">
+            <!-- Smileys -->
+            <div class="emoji-category" id="smileys">
+                <span onclick="addEmoji('😀')">😀</span>
+                <span onclick="addEmoji('😃')">😃</span>
+                <span onclick="addEmoji('😄')">😄</span>
+                <span onclick="addEmoji('😁')">😁</span>
+                <span onclick="addEmoji('😅')">😅</span>
+                <span onclick="addEmoji('😂')">😂</span>
+                <span onclick="addEmoji('🤣')">🤣</span>
+                <span onclick="addEmoji('😊')">😊</span>
+                <span onclick="addEmoji('😇')">😇</span>
+                <span onclick="addEmoji('🙂')">🙂</span>
+                <span onclick="addEmoji('😉')">😉</span>
+                <span onclick="addEmoji('😌')">😌</span>
+                <span onclick="addEmoji('😍')">😍</span>
+                <span onclick="addEmoji('🥰')">🥰</span>
+                <span onclick="addEmoji('😘')">😘</span>
+                <span onclick="addEmoji('😗')">😗</span>
+                <span onclick="addEmoji('😙')">😙</span>
+                <span onclick="addEmoji('😚')">😚</span>
+                <span onclick="addEmoji('😋')">😋</span>
+                <span onclick="addEmoji('😛')">😛</span>
+                <span onclick="addEmoji('😝')">😝</span>
+                <span onclick="addEmoji('😜')">😜</span>
+                <span onclick="addEmoji('🤪')">🤪</span>
+                <span onclick="addEmoji('🤨')">🤨</span>
+            </div>
+            <!-- Hearts -->
+            <div class="emoji-category hidden" id="hearts">
+                <span onclick="addEmoji('❤️')">❤️</span>
+                <span onclick="addEmoji('🧡')">🧡</span>
+                <span onclick="addEmoji('💛')">💛</span>
+                <span onclick="addEmoji('💚')">💚</span>
+                <span onclick="addEmoji('💙')">💙</span>
+                <span onclick="addEmoji('💜')">💜</span>
+                <span onclick="addEmoji('🖤')">🖤</span>
+                <span onclick="addEmoji('🤍')">🤍</span>
+                <span onclick="addEmoji('🤎')">🤎</span>
+                <span onclick="addEmoji('💕')">💕</span>
+                <span onclick="addEmoji('💞')">💞</span>
+                <span onclick="addEmoji('💓')">💓</span>
+                <span onclick="addEmoji('💗')">💗</span>
+                <span onclick="addEmoji('💖')">💖</span>
+                <span onclick="addEmoji('💘')">💘</span>
+                <span onclick="addEmoji('💝')">💝</span>
+            </div>
+            <!-- Hands -->
+            <div class="emoji-category hidden" id="hands">
+                <span onclick="addEmoji('👋')">👋</span>
+                <span onclick="addEmoji('🤚')">🤚</span>
+                <span onclick="addEmoji('✋')">✋</span>
+                <span onclick="addEmoji('🖐️')">🖐️</span>
+                <span onclick="addEmoji('👌')">👌</span>
+                <span onclick="addEmoji('🤌')">🤌</span>
+                <span onclick="addEmoji('🤏')">🤏</span>
+                <span onclick="addEmoji('✌️')">✌️</span>
+                <span onclick="addEmoji('🤞')">🤞</span>
+                <span onclick="addEmoji('🤟')">🤟</span>
+                <span onclick="addEmoji('🤘')">🤘</span>
+                <span onclick="addEmoji('👍')">👍</span>
+                <span onclick="addEmoji('👎')">👎</span>
+                <span onclick="addEmoji('👊')">👊</span>
+                <span onclick="addEmoji('🤝')">🤝</span>
+                <span onclick="addEmoji('🙏')">🙏</span>
+            </div>
+            <!-- Animals -->
+            <div class="emoji-category hidden" id="animals">
+                <span onclick="addEmoji('🐶')">🐶</span>
+                <span onclick="addEmoji('🐱')">🐱</span>
+                <span onclick="addEmoji('🐭')">🐭</span>
+                <span onclick="addEmoji('🐹')">🐹</span>
+                <span onclick="addEmoji('🐰')">🐰</span>
+                <span onclick="addEmoji('🦊')">🦊</span>
+                <span onclick="addEmoji('🐻')">🐻</span>
+                <span onclick="addEmoji('🐼')">🐼</span>
+                <span onclick="addEmoji('🐨')">🐨</span>
+                <span onclick="addEmoji('🐯')">🐯</span>
+                <span onclick="addEmoji('🦁')">🦁</span>
+                <span onclick="addEmoji('🐮')">🐮</span>
+                <span onclick="addEmoji('🐷')">🐷</span>
+                <span onclick="addEmoji('🐸')">🐸</span>
+                <span onclick="addEmoji('🐵')">🐵</span>
+                <span onclick="addEmoji('🐔')">🐔</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+        const roomId = '{{ room_id }}';
+
+        socket.on('connect', () => {
+            if (roomId) {
+                socket.emit('join_room', { room_id: roomId });
+            }
+        });
+
+        socket.on('message', (data) => {
+            const messageClass = data.isSelf ? 'message sent' : 'message';
+            addMessage(data.message, messageClass, data.user);
+        });
+
+        socket.on('user_joined', (data) => {
+            document.getElementById('user-count').textContent = data.count;
+        });
+
+        socket.on('user_left', (data) => {
+            document.getElementById('user-count').textContent = data.count;
+        });
+
+        socket.on('join_error', (data) => {
+            alert(data.message);
+            window.location.href = '/';
+        });
+
+        function sendMessage() {
+            const input = document.getElementById('message-input');
+            const message = input.value.trim();
+            if (message) {
+                socket.emit('message', {
+                    message: message,
+                    room_id: roomId
+                });
+                input.value = '';
+            }
+        }
+
+        function addMessage(message, messageClass = 'message', user = null) {
+            const messagesDiv = document.getElementById('chat-messages');
+            const messageElement = document.createElement('div');
+            messageElement.className = messageClass;
+            
+            const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            messageElement.innerHTML = `
+                <div class="message-content">
+                    ${user ? `${user}: ` : ''}${message}
+                    <span class="message-time">${timestamp}</span>
+                </div>
+            `;
+            
+            messagesDiv.appendChild(messageElement);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        document.getElementById('message-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        document.getElementById('quit-button').addEventListener('click', () => {
+            if (confirm('Are you sure you want to leave the chat?')) {
+                socket.disconnect();
+                window.location.href = '/';
+            }
+        });
+
+        // Emoji functions
+        function toggleEmojiPanel() {
+            const panel = document.getElementById('emoji-panel');
+            panel.classList.toggle('hidden');
+        }
+
+        function showEmojiCategory(categoryId) {
+            // Hide all categories
+            document.querySelectorAll('.emoji-category').forEach(cat => {
+                cat.classList.add('hidden');
+            });
+            // Show selected category
+            document.getElementById(categoryId).classList.remove('hidden');
+            // Update active button
+            document.querySelectorAll('.emoji-categories button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`.emoji-categories button[onclick*="${categoryId}"]`).classList.add('active');
+        }
+
+        function addEmoji(emoji) {
+            const input = document.getElementById('message-input');
+            input.value += emoji;
+            input.focus();
+        }
+
+        // Add emoji search functionality
+        document.getElementById('emoji-search').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            document.querySelectorAll('.emoji-grid span').forEach(emoji => {
+                if (searchTerm === '') {
+                    emoji.style.display = '';
+                    return;
+                }
+                const shouldShow = emoji.textContent.toLowerCase().includes(searchTerm);
+                emoji.style.display = shouldShow ? '' : 'none';
+            });
+        });
+
+        // Close emoji panel when clicking outside
+        document.addEventListener('click', (e) => {
+            const emojiPanel = document.getElementById('emoji-panel');
+            const emojiTrigger = document.getElementById('emoji-trigger');
+            
+            // If click is outside emoji panel and not on the emoji trigger button
+            if (!emojiPanel.contains(e.target) && !emojiTrigger.contains(e.target)) {
+                emojiPanel.classList.add('hidden');
+            }
+        });
+
+        // Prevent panel from closing when clicking inside it
+        document.getElementById('emoji-panel').addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+    </script>
+</body>
+</html> 

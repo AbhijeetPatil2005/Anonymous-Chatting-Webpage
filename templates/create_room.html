@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create Chat Room</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="create-room-container">
+        <h1>Create Private Chat Room</h1>
+        <p>Create your own private chat space and invite others to join</p>
+        
+        <div class="room-name-input">
+            <input 
+                type="text" 
+                id="room-name" 
+                placeholder="Enter a name for your room" 
+                maxlength="30" 
+                required
+                autocomplete="off"
+            >
+            <span class="input-hint">Choose a unique name for your chat room</span>
+        </div>
+
+        <button id="create-room-btn" class="create-room-btn">
+            <i class="fas fa-plus-circle"></i>
+            Create Room
+        </button>
+
+        <div id="room-link-container" class="room-link-container hidden">
+            <p>Share this link with people you want to invite:</p>
+            <div class="room-link-box">
+                <input type="text" id="room-link" readonly>
+                <button onclick="copyLink()" class="copy-btn">
+                    <i class="fas fa-copy"></i>
+                </button>
+            </div>
+            <p id="room-expiration"></p>
+            <button onclick="joinRoom()" class="join-btn">
+                <i class="fas fa-sign-in-alt"></i> Join Room
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+        let currentRoomId = null;
+        const roomNameInput = document.getElementById('room-name');
+        const createRoomBtn = document.getElementById('create-room-btn');
+        const linkContainer = document.getElementById('room-link-container');
+
+        // Add connection status handling
+        socket.on('connect', () => {
+            console.log('Connected to server');
+        });
+
+        socket.on('connect_error', (error) => {
+            console.error('Connection error:', error);
+            showError('Failed to connect to server');
+        });
+
+        // Enable/disable button based on input
+        roomNameInput.addEventListener('input', () => {
+            const roomName = roomNameInput.value.trim();
+            createRoomBtn.disabled = !roomName;
+            createRoomBtn.classList.toggle('active', roomName.length > 0);
+        });
+
+        createRoomBtn.addEventListener('click', () => {
+            const roomName = roomNameInput.value.trim();
+            if (!roomName) {
+                showError('Please enter a room name');
+                return;
+            }
+            
+            console.log('Creating room:', roomName); // Debug log
+            createRoomBtn.disabled = true;
+            createRoomBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
+            
+            socket.emit('create_room', { room_name: roomName }, (response) => {
+                console.log('Server response:', response); // Debug log
+            });
+        });
+
+        socket.on('room_created', (data) => {
+            console.log('Room created:', data); // Debug log
+            currentRoomId = data.room_id;
+            const linkInput = document.getElementById('room-link');
+            linkInput.value = data.room_link;
+            
+            // Show expiration time
+            const expiresAt = new Date(data.expires_at);
+            const expirationMsg = `Room expires at ${expiresAt.toLocaleString()}`;
+            document.getElementById('room-expiration').textContent = expirationMsg;
+            
+            createRoomBtn.disabled = false;
+            createRoomBtn.innerHTML = '<i class="fas fa-plus-circle"></i> Create Room';
+            
+            showSuccess('Room created successfully!');
+            linkContainer.classList.remove('hidden');
+        });
+
+        socket.on('room_error', (data) => {
+            console.error('Room error:', data); // Debug log
+            showError(data.message);
+            createRoomBtn.disabled = false;
+            createRoomBtn.innerHTML = '<i class="fas fa-plus-circle"></i> Create Room';
+        });
+
+        function showError(message) {
+            const notification = document.createElement('div');
+            notification.className = 'notification error';
+            notification.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 5000);
+        }
+
+        function showSuccess(message) {
+            const notification = document.createElement('div');
+            notification.className = 'notification success';
+            notification.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 5000);
+        }
+
+        function copyLink() {
+            const linkInput = document.getElementById('room-link');
+            linkInput.select();
+            document.execCommand('copy');
+            alert('Link copied to clipboard!');
+        }
+
+        function joinRoom() {
+            if (currentRoomId) {
+                window.location.href = `/join/${currentRoomId}`;
+            }
+        }
+
+        // Add error handling
+        socket.on('error', (error) => {
+            console.error('Socket Error:', error);
+            alert('An error occurred. Please try again.');
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat Room Selection</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="room-selection-container">
+        <h1>Welcome to Anonymous Chat</h1>
+        <div class="room-selection-grid">
+            <div class="room-option general-room">
+                <i class="fas fa-globe"></i>
+                <h2>General Chat Room</h2>
+                <p>Join the public chat room and talk with everyone</p>
+                <a href="/general" class="join-button">
+                    <i class="fas fa-sign-in-alt"></i> Join Now
+                </a>
+            </div>
+            <div class="room-option private-room">
+                <i class="fas fa-lock"></i>
+                <h2>Private Chat Room</h2>
+                <p>Create a private room and invite specific people</p>
+                <a href="/create-room" class="join-button">
+                    <i class="fas fa-plus"></i> Create Room
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 
