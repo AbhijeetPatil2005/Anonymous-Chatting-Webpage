@@ -925,4 +925,40 @@ input:focus-visible {
     .send-button {
         border: 2px solid currentColor;
     }
+}
+
+.footer {
+    position: fixed;
+    bottom: 20px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 14px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+.footer p {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.footer a {
+    color: #00ff9d;
+    text-decoration: none;
+    transition: color 0.3s;
+    font-size: 20px;
+}
+
+.footer a:hover {
+    color: #00b8ff;
+    transform: scale(1.1);
+}
+
+.footer i {
+    font-size: 16px;
 } 

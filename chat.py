@@ -8,10 +8,9 @@ from collections import deque
 import threading
 import atexit
 import re
-from pyngrok import ngrok
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your-secret-key'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key')
 app.config['UPLOAD_FOLDER'] = 'uploads'
 socketio = SocketIO(app)
 
