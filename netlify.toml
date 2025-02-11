@@ -1,0 +1,10 @@
+[build]
+  functions = "functions"         # Points to the functions directory
+  publish = "static"              # Publish your static files (you can adjust if needed)
+  command = "echo 'No build step needed for Python functions'"
+
+# Redirect all incoming paths to the Netlify function (so that Flask handles routing)
+[[redirects]]
+  from = "/*"
+  to = "/.netlify/functions/app"
+  status = 200
